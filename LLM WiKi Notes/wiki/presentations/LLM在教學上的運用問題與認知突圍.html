@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LLM 在高等教學上的運用問題與認知突圍 | Kinfolk 文青風格簡報</title>
+  <!-- 引入 Google Fonts 典雅思源宋體與無襯線思源黑體 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700;900&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* Kinfolk 極簡冷淡與和風微大地色系 */
+      --bg-canvas: #121314;           /* 展覽暗室背景，襯托象牙白畫布 */
+      --bg-slide: #FBF9F5;            /* 象牙白手工紙質感底色 */
+      --bg-card: #F4EFEA;             /* 和風微卡片底色（淡雅米褐） */
+      --bg-card-subtle: #FAF7F2;      /* 極淡卡片底色 */
+      --bg-tag: #EFE8E0;              /* 莫蘭迪印記標籤底色 */
+      
+      --text-main: #1F2326;           /* 沉穩炭墨黑 */
+      --text-muted: #6B7280;          /* 灰褐副文字 */
+      --text-serif: #181A1B;          /* 標題深墨色 */
+      
+      --accent: #B4533C;              /* 陶土紅 / 焦糖暖褐（高雅提亮色） */
+      --accent-muted: #D97757;        /* 淺陶土色 */
+      --indigo: #2D4059;              /* 靜謐靛青（理性輔助色） */
+      --sage: #5E7161;                /* 鼠尾草灰綠（解方與正向色） */
+      
+      --border-light: rgba(31, 35, 38, 0.08); /* 極細微邊框 */
+      --border-card: #E8E1D7;         /* 微卡片精緻邊界 */
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-canvas);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow: hidden;
+      font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, "PingFang TC", "Microsoft JhengHei", sans-serif;
+      -webkit-font-smoothing: antialiased;
+      user-select: none;
+    }
+
+    /* 標題與引言專用字體：典雅宋體/明體 */
+    .font-serif {
+      font-family: 'Noto Serif TC', "Songti TC", "Source Han Serif TC", "PMingLiU", serif;
+    }
+
+    /* 16:9 投影片展覽主體 */
+    .deck-container {
+      position: relative;
+      width: 92vw;
+      max-width: 1240px;
+      height: 51.75vw;
+      max-height: 700px;
+      background: var(--bg-slide);
+      border-radius: 8px; /* 柔和微圓角 */
+      box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.55), 0 0 1px 1px rgba(255, 255, 255, 0.05);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 極細頂部質感進度線 */
+    .progress-bar-container {
+      width: 100%;
+      height: 3px;
+      background: #EAE5DC;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 50;
+    }
+    .progress-bar {
+      height: 100%;
+      background: var(--accent);
+      width: 0%;
+      transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* 投影片單頁容器 */
+    .slide {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      padding: 48px 75px 56px;
+      display: none;
+      flex-direction: column;
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .slide.active {
+      display: flex;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* 雜誌感頂部導覽列 */
+    .slide-header {
+      margin-bottom: 22px;
+      border-bottom: 1px solid var(--border-light);
+      padding-bottom: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
+    .slide-number {
+      font-family: 'Noto Serif TC', serif;
+      font-size: 0.95rem;
+      letter-spacing: 0.15em;
+      color: var(--accent);
+      font-weight: 700;
+      margin-bottom: 4px;
+      display: block;
+    }
+
+    .slide-header h2 {
+      font-family: 'Noto Serif TC', serif;
+      font-size: 1.85rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      color: var(--text-serif);
+      line-height: 1.25;
+    }
+
+    .tag-stamp {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      background: var(--bg-tag);
+      color: #5C554E;
+      border-radius: 4px;
+      border: 1px solid rgba(0, 0, 0, 0.04);
+    }
+
+    .tag-accent {
+      background: #F8EBE7;
+      color: var(--accent);
+      border-color: #EED7CF;
+    }
+
+    .tag-sage {
+      background: #EBF0EC;
+      color: var(--sage);
+      border-color: #D2DDD4;
+    }
+
+    /* 內容排版佈局 */
+    .slide-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      font-size: 1.05rem;
+      line-height: 1.7;
+      color: #383D42;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 22px;
+      height: 100%;
+      align-items: stretch;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 18px;
+      height: 100%;
+      align-items: stretch;
+    }
+
+    /* 和風微卡片 */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 6px;
+      padding: 22px 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      transition: border-color 0.2s ease;
+    }
+
+    .card-clean {
+      background: #FFFFFF;
+      border-color: #ECE5DC;
+    }
+
+    .card-highlight {
+      background: #FAF5F2;
+      border-left: 3px solid var(--accent);
+    }
+
+    .card h3 {
+      font-family: 'Noto Serif TC', serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--text-serif);
+      margin-bottom: 12px;
+      letter-spacing: 0.02em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card p {
+      font-size: 0.96rem;
+      color: #4A5056;
+      line-height: 1.68;
+    }
+
+    .card ul {
+      margin-left: 18px;
+      margin-top: 6px;
+    }
+
+    .card li {
+      font-size: 0.95rem;
+      margin-bottom: 8px;
+      color: #4A5056;
+    }
+
+    /* 文藝雙引號金句盒 */
+    .quote-editorial {
+      position: relative;
+      background: #FAF7F2;
+      border-left: 3px solid var(--text-serif);
+      padding: 16px 26px;
+      margin: 12px 0 18px;
+      border-radius: 0 6px 6px 0;
+    }
+
+    .quote-editorial p {
+      font-family: 'Noto Serif TC', serif;
+      font-size: 1.18rem;
+      color: var(--text-serif);
+      line-height: 1.6;
+      letter-spacing: 0.02em;
+    }
+
+    /* 公式盒（文藝簡約線條） */
+    .formula-pill {
+      background: #FFFFFF;
+      border: 1px dashed #C8BFB3;
+      border-radius: 6px;
+      padding: 12px 20px;
+      font-family: 'Noto Serif TC', serif;
+      font-size: 1.1rem;
+      text-align: center;
+      color: var(--text-serif);
+      margin-bottom: 18px;
+      letter-spacing: 0.03em;
+    }
+
+    /* 封面頁特製美學 */
+    .title-slide {
+      text-align: left;
+      justify-content: center;
+      padding: 70px 100px;
+      background: radial-gradient(circle at top right, #F5EFE8 0%, #FBF9F5 65%);
+    }
+
+    .title-kicker {
+      font-family: 'Noto Serif TC', serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      letter-spacing: 0.25em;
+      color: var(--accent);
+      text-transform: uppercase;
+      margin-bottom: 16px;
+      display: inline-block;
+      border-bottom: 1px solid var(--accent);
+      padding-bottom: 4px;
+    }
+
+    .title-slide h1 {
+      font-family: 'Noto Serif TC', serif;
+      font-size: 2.85rem;
+      font-weight: 900;
+      letter-spacing: 0.04em;
+      line-height: 1.25;
+      color: var(--text-serif);
+      margin-bottom: 20px;
+    }
+
+    .title-slide .subtitle {
+      font-family: 'Noto Serif TC', serif;
+      font-size: 1.25rem;
+      font-weight: 400;
+      color: #635F5A;
+      line-height: 1.6;
+      margin-bottom: 36px;
+      max-width: 800px;
+    }
+
+    .title-meta-bar {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border-light);
+      font-size: 0.88rem;
+      color: #8C867E;
+      letter-spacing: 0.05em;
+    }
+
+    /* 底部低調極簡控制列 */
+    .controls {
+      position: absolute;
+      bottom: 18px;
+      left: 0;
+      width: 100%;
+      padding: 0 45px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 50;
+      pointer-events: none;
+    }
+
+    .controls-left, .controls-right {
+      pointer-events: auto;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn-minimal {
+      background: transparent;
+      border: 1px solid #D5CEBF;
+      padding: 6px 14px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: 'Noto Serif TC', serif;
+      font-size: 0.85rem;
+      color: #55504A;
+      letter-spacing: 0.05em;
+      transition: all 0.2s ease;
+    }
+
+    .btn-minimal:hover {
+      background: #FFFFFF;
+      border-color: var(--text-serif);
+      color: var(--text-serif);
+    }
+
+    .page-index-indicator {
+      font-family: 'Noto Serif TC', serif;
+      font-size: 0.85rem;
+      letter-spacing: 0.15em;
+      color: #8A847C;
+      margin-right: 6px;
+    }
+
+    .keyboard-hint {
+      position: fixed;
+      bottom: 12px;
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      color: #52525B;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="deck-container">
+    <!-- 極細頂部進度條 -->
+    <div class="progress-bar-container">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <!-- Slide 1: 封面 -->
+    <div class="slide title-slide active" data-index="1">
+      <span class="title-kicker">LLM Wiki 專題研究 · 認知與行為科學</span>
+      <h1>LLM 在高等教學上的<br>運用困境與認知突圍</h1>
+      <div class="subtitle">
+        從大腦神經機制、深度工作力到抗拖延的系統化剖析
+      </div>
+      <div class="title-meta-bar">
+        <span>文獻基底：認知負荷理論 · 拖延方程式 · 深度工作力</span>
+        <span>•</span>
+        <span>策展：LLM Wiki 效能架構師</span>
+        <span>•</span>
+        <span>共 12 篇章</span>
+      </div>
+    </div>
+
+    <!-- Slide 2: 大綱 (Agenda) -->
+    <div class="slide" data-index="2">
+      <div class="slide-header">
+        <div>
+          <span class="slide-number">No. 02 / 12</span>
+          <h2>全景導覽 · 思考的脈絡</h2>
+        </div>
+        <span class="tag-stamp">Overview</span>
+      </div>
+      <div class="slide-content">
+        <div class="grid-3">
+          <div class="card">
+            <span class="tag-stamp tag-accent" style="width: fit-content; margin-bottom: 10px;">Part I · 裂痕</span>
+            <h3>速度的代價</h3>
+            <p>生成式 AI 帶來的「產出效率神話」與「深度神經元迴路萎縮」之間的劇烈拉扯。</p>
+          </div>
+          <div class="card">
+            <span class="tag-stamp tag-accent" style="width: fit-content; margin-bottom: 10px;">Part II · 困局</span>
+            <h3>五大認知暗礁</h3>
+            <ul style="font-size: 0.92rem; line-height: 1.6;">
+              <li>認知卸載與假性勤奮</li>
+              <li>即時多巴胺瓦解內在動機</li>
+              <li>白紙恐懼與思考肌肉退化</li>
+              <li>學術誠信與評量機制失靈</li>
+              <li>幻覺偏誤與自動化盲從</li>
+            </ul>
+          </div>
+          <div class="card">
+            <span class="tag-stamp tag-sage" style="width: fit-content; margin-bottom: 10px;">Part III · 突圍</span>
+            <h3>雙向重構處方</h3>
+            <p><strong>教師端：</strong>過程性評量重塑。<br><strong>學生端：</strong>將 LLM 從代寫槍手轉化為「思維陪練員」之主動知識庫範式。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 3: 核心衝突 -->
+    <div class="slide" data-index="3">
+      <div class="slide-header">
+        <div>
+          <span class="slide-number">No. 03 / 12</span>
+          <h2>核心衝突 · 效率神話 vs 深度思索</h2>
+        </div>
+        <span class="tag-stamp">The Dilemma</span>
+      </div>
+      <div class="slide-content">
+        <div class="quote-editorial">
+          <p>「當產出文字變得極端廉價，人類在卡關與混亂中提煉思考的過程，是否也一併被廉價拋棄了？」</p>
+        </div>
+        <div class="grid-2">
+          <div class="card card-clean">
+            <h3>表象繁榮 · Shallow Speed</h3>
+            <ul>
+              <li>10 秒鐘自動產出 2,000 字格式工整的課堂小論文。</li>
+              <li>程式設計作業一鍵獲得解答，期末投影片一鍵完成視覺排版。</li>
+              <li>學生看似完成率 100%，量化教學成果一片大好。</li>
+            </ul>
+          </div>
+          <div class="card card-highlight">
+            <h3>暗藏危機 · Cognitive Atrophy</h3>
+            <ul>
+              <li><strong>學習曲線被壓平：</strong>跳過了「查證—反覆思索—神經重塑」的生理淬鍊區間。</li>
+              <li><strong>校園信任赤字：</strong>教師疲於防弊，陷入「學生用 AI 寫作業、交給助教用 AI 批改」的虛無荒謬閉環。</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 4: 困境一 -->
+    <div class="slide" data-index="4">
+      <div class="slide-header">
+        <div>
+          <span class="slide-number">No. 04 / 12</span>
+          <h2>困境一 · 過度認知卸載與假性勤奮</h2>
+        </div>
+        <span class="tag-stamp tag-accent">Deep Work vs Shallow Work</span>
+      </div>
+      <div class="slide-content">
+        <div class="grid-2">
+          <div class="card">
+            <h3>認知卸載 (Cognitive Offloading)</h3>
+            <p>大腦天生奉行<strong>最省力原則</strong>。當外部工具有能力瞬間填補思考空白，負責高階邏輯規劃的前額葉皮質會立即休眠，終止高耗能的心智模型構建。</p>
+            <p style="margin-top: 10px; color: var(--accent); font-weight: 500;">
+              眼睛看懂了，但工作記憶體從未進行實質的突觸連接。
+            </p>
+          </div>
+          <div class="card card-clean">
+            <h3>假性勤奮 (Pseudo-Work) 的數位進化</h3>
+            <ul>
+              <li><strong>過去的假性勤奮：</strong>在圖書館拿 5 種螢光筆劃線、工整抄寫講義。</li>
+              <li><strong>現在的假性勤奮：</strong>下了 30 個精美 Prompt、產出 50 頁排版考究的 PDF 報告，<strong>但學生的大腦神經元一片平靜，毫無實質認知吸收</strong>。</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 5: 困境二 -->
+    <div class="slide" data-index="5">
+      <div class="slide-header">
+        <div>
+          <span class="slide-number">No. 05 / 12</span>
+          <h2>困境二 · 即時多巴胺對內在動機的瓦解</h2>
+        </div>
+        <span class="tag-stamp tag-accent">The Procrastination Equation</span>
+      </div>
+      <div class="slide-content">
+        <div class="formula-pill">
+          動機強度 (Motivation) = (期望 Expectancy × 價值 Value) ÷ (衝動性 Impulsiveness × 延遲 Delay)
+        </div>
+        <div class="grid-2">
+          <div class="card card-clean">
+            <h3>延遲與衝動性的失衡放大</h3>
+            <p>過去寫報告需要 3 天查文獻，學生會安排時間塊逐步推進。如今深知「<strong>死線前 15 分鐘丟給 AI 即可交差</strong>」，大腦自動將回饋延遲推至無限遠，導致學期中更加肆無忌憚地「日間散漫、深夜報復性熬夜」。</p>
+          </div>
+          <div class="card">
+            <h3>虛假勝任感 (Illusion of Competence)</h3>
+            <p>AI 的隨叫隨到讓人產生錯覺，誤把「工具無所不知」等同於「自己已經融會貫通」，大幅稀釋了為了期末扎實複習的真實內在動機。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 6: 困境三 -->
+    <div class="slide" data-index="6">
+      <div class="slide-header">
+        <div>
+          <span class="slide-number">No. 06 / 12</span>
+          <h2>困境三 · 白紙恐懼變形與思考肌肉萎縮</h2>
+        </div>
+        <span class="tag-stamp tag-accent">Perfectionism Paralysis</span>
+      </div>
+      <div class="slide-content">
+        <div class="grid-2">
+          <div class="card card-clean">
+            <h3>白紙恐懼的變種依賴</h3>
+            <p>原本的白紙恐懼是面對空白 Word 不知如何下筆。如今演變成：<strong>「若不先讓 ChatGPT 列出 5 點結構，我連第一個論點都無法獨立動筆構思。」</strong></p>
+            <p style="margin-top: 8px; color: var(--text-muted);">
+              大腦的「起草生成能力」已退化為單純的「被動挑選能力」。
+            </p>
+          </div>
+          <div class="card">
+            <h3>失去了容納「爛初稿」的底氣</h3>
+            <p>寫作的本質是在混亂中提煉秩序。過早依賴結構完美的 AI 生成草稿，剥奪了學生在自我矛盾、推倒重來的困境中，鍛鍊<strong>抽象思考與邏輯骨幹</strong>的珍貴機會。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 7: 困境四 -->
+    <div class="slide" data-index="7">
+      <div class="slide-header">
+        <div>
+          <span class="slide-number">No. 07 / 12</span>
+          <h2>困境四 · 學術誠信危機與傳統評量失靈</h2>
+        </div>
+        <span class="tag-stamp tag-accent">Assessment Crisis</span>
+      </div>
+      <div class="slide-content">
+        <div class="quote-editorial" style="margin-bottom: 18px;">
+          <p>「當我們依然用 20 年前的作業形式，去考核擁有 2026 年最強 AI 的大腦，失靈是必然的代價。」</p>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <h3>成果交付導向 (Outcome-Only) 的崩潰</h3>
+            <p>傳統的期末書面報告、申論題課後作業，在大型語言模型面前已被降維打擊，徹底失去檢驗學生真實理解度的功能。</p>
+          </div>
+          <div class="card card-clean">
+            <h3>AI 偵測器的道德死胡同</h3>
+            <p>學術實證 AI 偵測器具備高偽陽性，極易誤判認真撰寫的非母語學生，引發師生對立與道德獵巫，耗損巨大的教學熱情。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 8: 困境五 -->
+    <div class="slide" data-index="8">
+      <div class="slide-header">
+        <div>
+          <span class="slide-number">No. 08 / 12</span>
+          <h2>困境五 · 幻覺偏誤與「自動化信任盲區」</h2>
+        </div>
+        <span class="tag-stamp tag-accent">Automation Bias</span>
+      </div>
+      <div class="slide-content">
+        <div class="grid-3">
+          <div class="card">
+            <h3>權威感幻覺 (Hallucination)</h3>
+            <p>模型能以極為流暢、自信且符合學術規範的語氣，無中生有地編造虛假作者、不存在的期刊論文與錯誤的實驗數據。</p>
+          </div>
+          <div class="card card-clean">
+            <h3>自動化盲從 (Automation Bias)</h3>
+            <p>在死線逼近的焦慮中，學生往往跳過查證原始文獻 (Ground Truth) 的基本功，直接將 AI 生成內容複製貼上。</p>
+          </div>
+          <div class="card">
+            <h3>思想同質化 (Homogenization)</h3>
+            <p>全班報告的論述視角、詞彙慣性高度雷同，失去了個人獨特的批判性、冷門切入點與真誠的生命經驗。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 9: 教師端處方 -->
+    <div class="slide" data-index="9">
+      <div class="slide-header">
+        <div>
+          <span class="slide-number">No. 09 / 12</span>
+          <h2>教師端處方 · 轉向「思維過程性評量」</h2>
+        </div>
+        <span class="tag-stamp tag-sage">Pedagogical Redesign</span>
+      </div>
+      <div class="slide-content">
+        <div class="grid-3">
+          <div class="card card-clean">
+            <span class="tag-stamp tag-sage" style="width: fit-content; margin-bottom: 8px;">策略 01</span>
+            <h3>過程性評量 (Process-Based)</h3>
+            <p>要求繳交「Prompt 迭代紀錄」與「自己對 AI 輸出的批判批改筆記」；引入課堂即席推導、無插電思考筆記與口試考核。</p>
+          </div>
+          <div class="card card-clean">
+            <span class="tag-stamp tag-sage" style="width: fit-content; margin-bottom: 8px;">策略 02</span>
+            <h3>逆向防 AI 題型</h3>
+            <p><strong>AI 抓蟲競賽：</strong>提供一篇充滿 AI 常見幻覺的論述，評量學生能否挑出 5 處邏輯謬誤；深入在地校園真實田野調查。</p>
+          </div>
+          <div class="card card-clean">
+            <span class="tag-stamp tag-sage" style="width: fit-content; margin-bottom: 8px;">策略 03</span>
+            <h3>認知教練定位</h3>
+            <p>教師不再是課堂上的「知識轉錄者」，而是引導批判思維、後設認知、價值判斷與倫理思辨的引路教練。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 10: 學生端處方 -->
+    <div class="slide" data-index="10">
+      <div class="slide-header">
+        <div>
+          <span class="slide-number">No. 10 / 12</span>
+          <h2>學生端處方 · 將 LLM 視為「思維陪練員」</h2>
+        </div>
+        <span class="tag-stamp tag-accent">Student Action Guide</span>
+      </div>
+      <div class="slide-content">
+        <div class="grid-2">
+          <div class="card card-highlight">
+            <h3>思維陪練員心法 (Socratic Sparring)</h3>
+            <p style="margin-bottom: 8px;">❌ <strong>槍手式用法：</strong>「幫我寫一篇 2000 字探討社群媒體對心理健康影響的期末報告。」</p>
+            <p>✅ <strong>陪練式用法：</strong>「這是我自己思考出的 3 個核心論點。請扮演嚴苛的反方學者，指出我論證最薄弱的 2 個邏輯漏洞。」</p>
+          </div>
+          <div class="card card-clean">
+            <h3>「先紙筆思考 15 分鐘」鐵律</h3>
+            <ul>
+              <li><strong>兩分鐘定律：</strong>在打開任何 AI 介面之前，先在白紙上手寫下最原始的混亂思路與 3 個問題。</li>
+              <li><strong>深度工作塊隔離：</strong>構思期間徹底關閉 AI 視窗，避免思路被外部語義強行帶走，只在後續修訂時批次使用。</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 11: LLM Wiki 終極模式 -->
+    <div class="slide" data-index="11">
+      <div class="slide-header">
+        <div>
+          <span class="slide-number">No. 11 / 12</span>
+          <h2>終極突圍 · 用「LLM Wiki」實現知識複利</h2>
+        </div>
+        <span class="tag-stamp tag-sage">Compounding Knowledge</span>
+      </div>
+      <div class="slide-content">
+        <div class="grid-2">
+          <div class="card card-clean">
+            <h3>消極模式 · 即用即丟的荒漠</h3>
+            <p>隨意問問題 $\rightarrow$ LLM 吐出答案 $\rightarrow$ 複製貼上交差 $\rightarrow$ 關閉視窗。</p>
+            <p style="margin-top: 10px; color: var(--accent); font-weight: 500;">
+              大腦沒有留下任何認知沉澱，下一次面對難題依然脆弱不堪。
+            </p>
+          </div>
+          <div class="card" style="background: #FAF7F2; border: 1.5px solid var(--sage);">
+            <h3>主動編譯 · 持續演進的個人外腦</h3>
+            <p>1. <strong>真實文獻來源：</strong>將 PDF/論文妥善保存於 raw 庫中。<br>
+               2. <strong>LLM 協同編譯：</strong>提煉概念與方法，建立雙向鏈結網絡。<br>
+               3. <strong>持久複利：</strong>Obsidian 作為知識基地，人在其中主導批判與思索，工具負責維護與關聯。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 12: 結語 -->
+    <div class="slide title-slide" data-index="12" style="text-align: center; justify-content: center; align-items: center; padding: 60px 80px;">
+      <span class="title-kicker" style="margin-bottom: 24px;">結語 · 核心競爭力</span>
+      <h2 style="font-family: 'Noto Serif TC', serif; font-size: 2.3rem; line-height: 1.35; color: var(--text-serif); margin-bottom: 24px;">
+        前額葉皮質的「痛苦思索」不是 Bug，<br>而是人類深度學習的唯一 Feature。
+      </h2>
+      <div class="quote-editorial" style="max-width: 760px; margin: 0 auto 36px; text-align: left;">
+        <p style="font-size: 1.05rem; color: #524E48;">
+          「AI 不會取代懂得深度思考的人；但只會依賴 AI 進行淺薄產出的人，將最先失去立足之地。」
+        </p>
+      </div>
+      <div style="font-family: 'Noto Serif TC', serif; font-size: 0.92rem; color: #8A847C; letter-spacing: 0.08em;">
+        感謝聆聽 · 歡迎查閱 Wiki 庫內完整卡片進一步交流
+      </div>
+    </div>
+
+    <!-- 底部極簡控制列 -->
+    <div class="controls">
+      <div class="controls-left">
+        <button class="btn-minimal" id="prevBtn" onclick="prevSlide()">← PREV</button>
+        <button class="btn-minimal" id="nextBtn" onclick="nextSlide()">NEXT →</button>
+      </div>
+      <div class="controls-right">
+        <span class="page-index-indicator" id="slideCounter">01 / 12</span>
+        <button class="btn-minimal" onclick="toggleFullScreen()">⛶ FULLSCREEN</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="keyboard-hint">
+    [ 鍵盤導航：方向鍵 ◀ / ▶ 或 空白鍵翻頁 · 按 F 鍵全螢幕 ]
+  </div>
+
+  <script>
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+    const progressBar = document.getElementById('progressBar');
+    const slideCounter = document.getElementById('slideCounter');
+
+    function padZero(num) {
+      return num < 10 ? '0' + num : num;
+    }
+
+    function updateSlide(index) {
+      if (index < 0) index = 0;
+      if (index >= totalSlides) index = totalSlides - 1;
+      
+      slides.forEach((slide, i) => {
+        slide.classList.remove('active');
+        if (i === index) {
+          slide.classList.add('active');
+        }
+      });
+
+      currentSlide = index;
+      const progressPercent = ((index + 1) / totalSlides) * 100;
+      progressBar.style.width = progressPercent + '%';
+      slideCounter.textContent = `${padZero(index + 1)} / ${padZero(totalSlides)}`;
+    }
+
+    function nextSlide() {
+      if (currentSlide < totalSlides - 1) {
+        updateSlide(currentSlide + 1);
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 0) {
+        updateSlide(currentSlide - 1);
+      }
+    }
+
+    function toggleFullScreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+          console.error(err);
+        });
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    }
+
+    // 鍵盤控制
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'Backspace' || e.key === 'PageUp') {
+        prevSlide();
+      } else if (e.key === 'f' || e.key === 'F') {
+        toggleFullScreen();
+      }
+    });
+
+    // 初始化
+    updateSlide(0);
+  </script>
+</body>
+</html>
